@@ -1,10 +1,10 @@
 package com.bookstore.go.controller;
 
+import com.bookstore.go.dto.BookRequestDto;
+import com.bookstore.go.dto.BookResponseDto;
 import com.bookstore.go.service.BookService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * API controller.
@@ -20,15 +20,23 @@ public class BookController {
     }
 
     @PostMapping
-    // add new
+    public BookResponseDto add(@Valid @RequestBody BookRequestDto request) {
+        return service.addNewBook(request);
+    }
 
-    // get barcode
+    @GetMapping("/{barcode}")
+    public BookResponseDto getByBarcode(@PathVariable String barcode) {
+        return service.getByBarcode(barcode);
+    }
 
     // search criteria
 
-    // update
+    @PatchMapping("/{barcode}")
+    public BookResponseDto update(@PathVariable String barcode, @Valid @RequestBody BookUpdateRequestDto request) {
+        return service.update(barcode, request);
+    }
 
     // calculate total price
 
-    // request list of all barcodes grou by quantity, barcodes sorted by total price
+    // request list of all barcodes group by quantity, barcodes sorted by total price
 }
