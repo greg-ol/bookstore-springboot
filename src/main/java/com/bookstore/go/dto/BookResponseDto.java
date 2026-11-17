@@ -16,11 +16,10 @@ public record BookResponseDto(
         BigDecimal price,
         BookType type,
         Integer releaseYear,
-        Integer scienceIndex,
-        BigDecimal totalPrice
+        Integer scienceIndex
 ) {
-    public static BookResponseDto from(Book b, BigDecimal totalPrice) {
+    public static BookResponseDto from(Book b) {
         return new BookResponseDto(b.getName(), b.getAuthor(), b.getBarcode(), b.getQuantity(), b.getPrice()
-                , b.getType(), b.getReleaseYear(), b.getScienceIndex(), totalPrice);
+                , b.getType(), b.getReleaseYear(), b.getScienceIndex());
     }
 }

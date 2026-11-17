@@ -54,7 +54,7 @@ public class BookController {
     }
 
     @GetMapping("/export")
-    public List<BookRequestDto> export() {
+    public List<BookResponseDto> export() {
         return service.export();
     }
 

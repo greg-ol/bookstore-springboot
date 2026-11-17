@@ -9,12 +9,12 @@ import com.bookstore.go.model.BookType;
 import com.bookstore.go.repository.BookRepository;
 import com.bookstore.go.repository.BookSearchCriteria;
 import jakarta.validation.Valid;
-import jakarta.validation.Validator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -26,12 +26,10 @@ public class BookService {
     private static final int MAX_YEAR_ANTIQUE = 1900;
 
     private final BookRepository repository;
-    private final Validator validator;
     private final BookPriceHelper helper;
 
-    public BookService(BookRepository repository, Validator validator, BookPriceHelper helper) {
+    public BookService(BookRepository repository, BookPriceHelper helper) {
         this.repository = repository;
-        this.validator = validator;
         this.helper = helper;
     }
 
@@ -74,11 +72,12 @@ public class BookService {
         Set<String> requestBarcodes = new HashSet<>(barcodes);
 
         BigDecimal sum = BigDecimal.valueOf(0);
-        requestBarcodes.forEach(bc -> {
+
+        for (String bc : barcodes) {
             Book b = findByBarcode(bc);
             BigDecimal price = this.helper.totalPrice(b);
-            sum.add(price);
-        });
+            sum = sum.add(price);
+        }
 
         return new TotalPriceResponseDto(sum);
     }
@@ -92,12 +91,10 @@ public class BookService {
         List<Book> books = repository.findAll()
                 .stream().filter(b -> b.getQuantity() > 0).toList();
 
-        Map<Integer, List<String>> orderedMap = books
+        return books
                 .stream().collect(Collectors.groupingBy(Book::getQuantity, TreeMap::new,
                         Collectors.collectingAndThen(Collectors.toList(),
                                 list -> list.stream().sorted(compByTotal).map(Book::getBarcode).toList())));
-
-        return orderedMap;
     }
 
     @Transactional(readOnly = true)
@@ -108,11 +105,34 @@ public class BookService {
     }
 
     @Transactional
-    public List<BookRequestDto> export() {
+    public List<BookResponseDto> export() {
+        return repository.findAll().stream()
+                .sorted(Comparator.comparing(Book::getBarcode))
+                .map(BookResponseDto::from).toList();
     }
 
     @Transactional(readOnly = true)
     public ImportResultDto importBooks(List<BookRequestDto> books) {
+        AtomicInteger createdRecords = new AtomicInteger();
+        books.forEach(b -> {
+            String barcode = b.barcode();
+            Optional<Book> existingBook = repository.findByBarcode(barcode);
+
+            // avoid duplications
+            if (existingBook.isPresent()) {
+                throw new DuplicatedBookException(barcode);
+            }
+
+            Book record = new Book();
+            record.setBarcode(barcode);
+            populateBook(record, b);
+            checkValidity(record);
+
+            repository.save(record);
+            createdRecords.getAndIncrement();
+        });
+
+        return new ImportResultDto(createdRecords.get());
     }
 
     private Book findByBarcode(String barcode) {
@@ -121,7 +141,7 @@ public class BookService {
     }
 
     private BookResponseDto convertToResponse(Book b) {
-        return BookResponseDto.from(b, new BigDecimal(1));
+        return BookResponseDto.from(b);
     }
 
     private void populateBook(Book book, BookRequestDto dto) {
