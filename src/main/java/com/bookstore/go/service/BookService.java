@@ -1,19 +1,21 @@
 package com.bookstore.go.service;
 
-import com.bookstore.go.dto.BookRequestDto;
-import com.bookstore.go.dto.BookResponseDto;
+import com.bookstore.go.dto.*;
 import com.bookstore.go.exception.BookNotFoundException;
 import com.bookstore.go.exception.DuplicatedBookException;
 import com.bookstore.go.exception.InvalidBookDataException;
 import com.bookstore.go.model.Book;
 import com.bookstore.go.model.BookType;
 import com.bookstore.go.repository.BookRepository;
-import jakarta.transaction.Transactional;
+import com.bookstore.go.repository.BookSearchCriteria;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Book service - business logic implementation.
@@ -25,10 +27,12 @@ public class BookService {
 
     private final BookRepository repository;
     private final Validator validator;
+    private final BookPriceHelper helper;
 
-    public BookService(BookRepository repository, Validator validator) {
+    public BookService(BookRepository repository, Validator validator, BookPriceHelper helper) {
         this.repository = repository;
         this.validator = validator;
+        this.helper = helper;
     }
 
     @Transactional
@@ -43,6 +47,77 @@ public class BookService {
         book.setBarcode(barcode);
         populateBook(book, request);
         return convertToResponse(repository.save(book));
+    }
+
+    @Transactional(readOnly = true)
+    public BookResponseDto getByBarcode(String barcode) {
+        Book book = findByBarcode(barcode);
+        return convertToResponse(book);
+    }
+
+    @Transactional
+    public BookResponseDto update(String barcode, BookUpdateRequestDto request) {
+        Book book = findByBarcode(barcode);
+        if (!request.name().isBlank()) book.setName(request.name());
+        if (!request.author().isBlank()) book.setAuthor(request.author());
+        if (request.quantity() != null) book.setQuantity(request.quantity());
+        if (request.price() != null) book.setPrice(request.price());
+        if (request.releaseYear() != null) book.setReleaseYear(request.releaseYear());
+        if (request.scienceIndex() != null) book.setScienceIndex(request.scienceIndex());
+
+        checkValidity(book);
+        return convertToResponse(book);
+    }
+
+    @Transactional(readOnly = true)
+    public TotalPriceResponseDto getTotalPrice(List<String> barcodes) {
+        Set<String> requestBarcodes = new HashSet<>(barcodes);
+
+        BigDecimal sum = BigDecimal.valueOf(0);
+        requestBarcodes.forEach(bc -> {
+            Book b = findByBarcode(bc);
+            BigDecimal price = this.helper.totalPrice(b);
+            sum.add(price);
+        });
+
+        return new TotalPriceResponseDto(sum);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Integer, List<String>> getBarcodesByQuantity() {
+        Comparator<Book> compByTotal = Comparator.comparing(helper::totalPrice)
+                .thenComparing(Book::getBarcode);
+
+        // all books with quantity bigger then 0
+        List<Book> books = repository.findAll()
+                .stream().filter(b -> b.getQuantity() > 0).toList();
+
+        Map<Integer, List<String>> orderedMap = books
+                .stream().collect(Collectors.groupingBy(Book::getQuantity, TreeMap::new,
+                        Collectors.collectingAndThen(Collectors.toList(),
+                                list -> list.stream().sorted(compByTotal).map(Book::getBarcode).toList())));
+
+        return orderedMap;
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookResponseDto> search(BookSearchCriteriaDto criteria) {
+        return repository.findAll(BookSearchCriteria.getSearchSpec(criteria))
+                .stream().sorted(Comparator.comparing(Book::getBarcode))
+                .map(this::convertToResponse).toList();
+    }
+
+    @Transactional
+    public List<BookRequestDto> export() {
+    }
+
+    @Transactional(readOnly = true)
+    public ImportResultDto importBooks(List<BookRequestDto> books) {
+    }
+
+    private Book findByBarcode(String barcode) {
+        return repository.findByBarcode(barcode).orElseThrow(
+                () -> new BookNotFoundException("Not found book with barcode: " + barcode));
     }
 
     private BookResponseDto convertToResponse(Book b) {
@@ -99,7 +174,7 @@ public class BookService {
 
     private static void checkScienceIndex(Book b) {
         if (b.getScienceIndex() != null) {
-            report("science index not allowed for: " + b.getType());
+            report("science index not allowed for Book Type: " + b.getType());
         }
     }
 
@@ -108,9 +183,4 @@ public class BookService {
         throw new InvalidBookDataException(message);
     }
 
-    public BookResponseDto getByBarcode(String barcode) {
-        Book book = repository.findByBarcode(barcode).orElseThrow(
-                () -> new BookNotFoundException("Not found book with barcode: " + barcode));
-        return convertToResponse(book);
-    }
 }
