@@ -73,7 +73,7 @@ public class BookService {
 
         BigDecimal sum = BigDecimal.valueOf(0);
 
-        for (String bc : barcodes) {
+        for (String bc : requestBarcodes) {
             Book b = findByBarcode(bc);
             BigDecimal price = this.helper.totalPrice(b);
             sum = sum.add(price);

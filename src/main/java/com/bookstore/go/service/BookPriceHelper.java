@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Date;
+import java.time.LocalDate;
 
 /**
  * Provides logic for price calculation.
@@ -20,7 +20,7 @@ public class BookPriceHelper {
         BigDecimal total = switch (book.getType()) {
             case STANDARD -> stdCalc;
             case ANTIQUE -> {
-                int age = new Date().getYear() - book.getReleaseYear();
+                int age = LocalDate.now().getYear() - book.getReleaseYear();
                 yield stdCalc.multiply(BigDecimal.valueOf(age)).divide(BigDecimal.TEN);
             }
             case SCIENCE_JOURNAL -> stdCalc.multiply(BigDecimal.valueOf(book.getScienceIndex()));
