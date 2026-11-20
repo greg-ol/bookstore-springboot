@@ -31,12 +31,10 @@ public class BookController {
         return service.getByBarcode(barcode);
     }
 
-    // different search criteria
-    @GetMapping()
+    @PostMapping("/search")
     public List<BookResponseDto> search(@RequestBody BookSearchCriteriaDto criteria) {
         return service.search(criteria);
     }
-
 
     @PatchMapping("/{barcode}")
     public BookResponseDto update(@PathVariable String barcode, @Valid @RequestBody BookUpdateRequestDto request) {

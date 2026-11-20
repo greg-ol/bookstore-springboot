@@ -29,5 +29,4 @@ public class BookPriceHelper {
         return total.setScale(2, RoundingMode.HALF_UP);
     }
 
-
 }

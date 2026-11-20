@@ -56,8 +56,8 @@ public class BookService {
     @Transactional
     public BookResponseDto update(String barcode, BookUpdateRequestDto request) {
         Book book = findByBarcode(barcode);
-        if (!request.name().isBlank()) book.setName(request.name());
-        if (!request.author().isBlank()) book.setAuthor(request.author());
+        if (hasValue(request.name())) book.setName(request.name());
+        if (hasValue(request.author())) book.setAuthor(request.author());
         if (request.quantity() != null) book.setQuantity(request.quantity());
         if (request.price() != null) book.setPrice(request.price());
         if (request.releaseYear() != null) book.setReleaseYear(request.releaseYear());
@@ -134,6 +134,11 @@ public class BookService {
 
         return new ImportResultDto(createdRecords.get());
     }
+
+    private boolean hasValue(String str) {
+        return str != null && !str.isBlank();
+    }
+
 
     private Book findByBarcode(String barcode) {
         return repository.findByBarcode(barcode).orElseThrow(

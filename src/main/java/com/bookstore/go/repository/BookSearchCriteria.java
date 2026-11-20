@@ -25,10 +25,10 @@ public final class BookSearchCriteria {
                 predicates.add(cb.equal(root.get("barcode"), dto.barcode()));
             }
             if (StringUtils.hasText(dto.name())) {
-                predicates.add(cb.like(cb.lower(root.get("name")), dto.name()));
+                predicates.add(cb.like(cb.lower(root.get("name")), writeContains(dto.name()), '\\'));
             }
             if (StringUtils.hasText(dto.author())) {
-                predicates.add(cb.like(cb.lower(root.get("author")), dto.author()));
+                predicates.add(cb.like(cb.lower(root.get("author")), writeContains(dto.author()), '\\'));
             }
             if (dto.quantity() != null) {
                 predicates.add(cb.equal(root.get("quantity"), dto.quantity()));
@@ -50,5 +50,11 @@ public final class BookSearchCriteria {
         };
     }
 
+    private static String writeContains(String str) {
+        String escapedStr =
+                str.toLowerCase().replace("\\", "\\\\").replace("%", "\\%")
+                        .replace("_", "\\_");
+        return "%" + escapedStr + "%";
+    }
 
 }
