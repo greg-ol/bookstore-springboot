@@ -1,0 +1,27 @@
+info:
+  name: Add new book
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://{{host}}:{{port}}/{{api}}
+  body:
+    type: json
+    data: |-
+      {
+        "name": "book22",
+        "author": "J Greenson",
+        "barcode": "a1",
+        "quantity": 200,
+        "price": 23.99,
+        "type": "STANDARD"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

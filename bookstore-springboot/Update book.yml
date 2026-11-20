@@ -1,0 +1,23 @@
+info:
+  name: Update book
+  type: http
+  seq: 7
+
+http:
+  method: PATCH
+  url: http://{{host}}:{{port}}/{{api}}/a1
+  body:
+    type: json
+    data: |-
+      {
+        "author": "Jane Greenson",
+        "quantity": 10
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

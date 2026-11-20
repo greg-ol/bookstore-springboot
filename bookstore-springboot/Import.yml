@@ -1,0 +1,81 @@
+info:
+  name: Import
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: http://{{host}}:{{port}}/{{api}}/import
+  body:
+    type: json
+    data: |-
+      [
+        {
+          "barcode": "B-1001",
+          "name": "Clean Code",
+          "author": "Robert C. Martin",
+          "quantity": 5,
+          "price": 33.50,
+          "type": "STANDARD"
+        },
+        {
+          "barcode": "B-1002",
+          "name": "Effective Java",
+          "author": "Joshua Bloch",
+          "quantity": 5,
+          "price": 45.00,
+          "type": "STANDARD"
+        },
+        {
+          "barcode": "B-1003",
+          "name": "The Pragmatic Programmer",
+          "author": "Andrew Hunt",
+          "quantity": 2,
+          "price": 39.90,
+          "type": "STANDARD"
+        },
+        {
+          "barcode": "A-2001",
+          "name": "Principia Mathematica",
+          "author": "Isaac Newton",
+          "quantity": 1,
+          "price": 1200.00,
+          "type": "ANTIQUE",
+          "releaseYear": 1687
+        },
+        {
+          "barcode": "A-2002",
+          "name": "Pride and Prejudice (first edition)",
+          "author": "Jane Austen",
+          "quantity": 2,
+          "price": 800.00,
+          "type": "ANTIQUE",
+          "releaseYear": 1813
+        },
+        {
+          "barcode": "J-3001",
+          "name": "Nature Vol. 1",
+          "author": "Various",
+          "quantity": 5,
+          "price": 12.50,
+          "type": "SCIENCE_JOURNAL",
+          "scienceIndex": 9
+        },
+        {
+          "barcode": "J-3002",
+          "name": "Journal of Applied Physics",
+          "author": "Various",
+          "quantity": 2,
+          "price": 20.00,
+          "type": "SCIENCE_JOURNAL",
+          "scienceIndex": 6
+        }
+      ]
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

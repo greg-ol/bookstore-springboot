@@ -1,0 +1,23 @@
+info:
+  name: Search books
+  type: http
+  seq: 8
+
+http:
+  method: POST
+  url: http://{{host}}:{{port}}/{{api}}/search
+  body:
+    type: json
+    data: |-
+      {
+        "author": "J Greenson",
+        "quantity": 200
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
